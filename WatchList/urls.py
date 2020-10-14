@@ -15,9 +15,14 @@ Including another URLconf
 """
 # from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
+
+def landing(request):
+    return JsonResponse({"ping":"pong!"})
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
+    path('', landing),
     path('user/', include('user.urls')),
     path('movie/', include('movie.urls')),
     path('list/', include('list.urls'))
