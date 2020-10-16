@@ -5,8 +5,9 @@ from WatchList.middleware import jwtRequired
 from WatchList.helpers import getUserID
 from .models import Lists, ListMovies
 from . import transformer
-from datetime import datetime
+from django.utils import timezone
 from django.http import JsonResponse
+from activity import log
 
 
 @jwtRequired
@@ -34,8 +35,10 @@ def addItem(request, list_id):
         model.movie_id = movie_id
         model.title = json_data["title"]
         model.poster_path = json_data["poster_path"]
-        model.created_at = datetime.now()
         model.save()
+
+        # log
+        log.logger(user_id=user_id, ref='list_item', ref_id=model.id, action='add')
 
         return Response.ok(values=transformer.singleMovie(model), message="Movie successfully added.")
     else:
@@ -56,8 +59,11 @@ def removeItem(request, list_id):
         find_movie = ListMovies.objects.filter(user_id=user_id, list_id=list_id, movie_id=movie_id).first()
         if not find_movie:
             return Response.badRequest(message="Selected movie is not found.")
-
+        
+        ref_id = find_movie.id
         find_movie.delete()
+
+        log.logger(user_id=user_id, ref='list_item', ref_id=ref_id, action='remove')
 
         return Response.ok(message="Movie deleted from the list.")
     else:
@@ -68,6 +74,10 @@ def clearItem(request, list_id):
     if request.method == 'POST':
         # Clear movies belongs by list
         find_movie = ListMovies.objects.filter(list_id=list_id).delete()
+
+        user_id = getUserID(request)
+
+        log.logger(user_id=user_id, ref='list', ref_id=list_id, action='clear')
 
         return Response.ok(message="List successfully cleared.")
     else:
@@ -105,9 +115,9 @@ def addList(request):
     insert_list.user_id = user_id
     insert_list.name = json_data["name"]
     insert_list.note = json_data["note"]
-    insert_list.created_at = datetime.now()
-    insert_list.updated_at = datetime.now()
     insert_list.save()
+
+    log.logger(user_id=user_id, ref='list', ref_id=insert_list.id, action='add')
 
     return Response.ok(values=transformer.singleTransform(insert_list), message="List successfully added.")
 
@@ -157,8 +167,12 @@ def updateList(request, list_id):
     if not json_data['name']:
         return Response.badRequest(message="List name is required!")
 
-    find_list.updated_at = datetime.now()
+    find_list.name = json_data['name']
+    find_list.note = json_data['note']
+    find_list.updated_at = timezone.now()
     find_list.save()
+
+    log.logger(user_id=user_id, ref='list', ref_id=find_list.id, action='update')
 
     return Response.ok(message="List successfully updated.")
 
@@ -175,5 +189,7 @@ def deleteList(request, list_id):
 
     # Delete list
     find_list.delete()
+
+    log.logger(user_id=user_id, ref='list', ref_id=list_id, action='delete')
     
     return Response.ok(message="List successfully deleted.")

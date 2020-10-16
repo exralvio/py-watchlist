@@ -52,7 +52,8 @@ INSTALLED_APPS = [
 
     'user.apps.UserConfig',
     'movie.apps.MovieConfig',
-    'list.apps.ListConfig'
+    'list.apps.ListConfig',
+    'activity.apps.ActivityConfig',
 ]
 
 MIDDLEWARE = [
@@ -130,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Jakarta'
 
 USE_I18N = True
 
